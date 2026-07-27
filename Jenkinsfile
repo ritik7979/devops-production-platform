@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        COMPOSE_PROJECT_NAME = "devops-production-platform"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -26,31 +22,52 @@ pipeline {
             }
         }
 
+        stage('Create Backend .env') {
+            steps {
+                writeFile file: 'application/backend/.env', text: '''
+PORT=5000
+
+DB_HOST=mysql
+DB_USER=devops
+DB_PASSWORD=devops123
+DB_NAME=shopdb
+'''
+            }
+        }
+
         stage('Start Containers') {
             steps {
                 sh 'docker compose up -d'
             }
         }
 
+        stage('Wait for Services') {
+            steps {
+                sh 'sleep 20'
+            }
+        }
+
         stage('Verify Deployment') {
             steps {
-                sh 'docker ps'
-                sh 'curl -f http://localhost:3000 || exit 1'
+                sh 'docker compose ps'
+                sh 'curl -f http://localhost:3000'
             }
         }
     }
 
     post {
+
+        always {
+            sh 'docker image prune -f'
+        }
+
         success {
-            echo 'Application deployed successfully.'
+            echo 'Application deployed successfully!'
         }
 
         failure {
             echo 'Pipeline failed.'
-        }
-
-        always {
-            sh 'docker image prune -f'
+            sh 'docker compose logs || true'
         }
     }
 }
