@@ -18,9 +18,38 @@ pipeline {
 
         stage('Build Images') {
             steps {
-                sh 'docker compose build'
+                sh '''
+                docker compose build
+                
+
+                docker tag devops-production-platform-backend:latest chritik24/devops-backend:latest
+                docker tag devops-production-platform-frontend:latest chritik24/devops-frontend:latest
+                '''
+                
             }
         }
+
+
+        stage('Docker Login & Push') {
+           steps {
+              withCredentials([usernamePassword(
+                  credentialsId: 'dockerhub-creds',
+                  usernameVariable: 'DOCKER_USER',
+                  passwordVariable: 'DOCKER_PASS'
+              )]) {
+
+                  sh '''
+                  echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                  docker push chritik24/devops-backend:latest
+                  docker push chritik24/devops-frontend:latest
+
+                  docker logout
+                  '''
+                }
+           }
+       }
+
 
         stage('Create Backend .env') {
             steps {
