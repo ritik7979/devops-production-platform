@@ -18,31 +18,37 @@ spec:
 
     spec:
       containers:
+        - name: mysql
+          image: mysql:8.4
 
-      - name: mysql
-        image: mysql:8.4
+          ports:
+            - containerPort: 3306
 
-        ports:
-        - containerPort: 3306
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
 
-        resources:
-          requests:
-            cpu: "250m"
-            memory: "256Mi"
+          envFrom:
+            - secretRef:
+                name: mysql-secret
 
-          limits:
-            cpu: "1000m"
-            memory: "1Gi"
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
 
-        envFrom:
-        - secretRef:
-            name: mysql-secret
-
-        volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
+            - name: mysql-initdb
+              mountPath: /docker-entrypoint-initdb.d/init.sql
+              subPath: init.sql
 
       volumes:
-      - name: mysql-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc
+
+        - name: mysql-initdb
+          configMap:
+            name: mysql-initdb
