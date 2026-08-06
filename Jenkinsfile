@@ -184,10 +184,4 @@ stage('Trivy Image Scan') {
             '''
         }
 
-        always {
-            sh '''
-            docker image prune -f
-            '''
-        }
-    }
-}
+   }
