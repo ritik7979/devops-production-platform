@@ -60,6 +60,29 @@ pipeline {
             }
         }
 
+stage('Trivy Image Scan') {
+    steps {
+        sh '''
+        mkdir -p trivy-reports
+
+        echo "========== Scanning Backend Image =========="
+        trivy image \
+        --severity HIGH,CRITICAL \
+        --format table \
+        --output trivy-reports/backend-report.txt \
+        chritik24/devops-backend:latest
+
+        echo "========== Scanning Frontend Image =========="
+        trivy image \
+        --severity HIGH,CRITICAL \
+        --format table \
+        --output trivy-reports/frontend-report.txt \
+        chritik24/devops-frontend:latest
+        '''
+    }
+}
+
+
         stage('Login & Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(
@@ -125,6 +148,12 @@ pipeline {
     }
 
     post {
+      
+      always {
+        archiveArtifacts artifacts: 'trivy-reports/*.txt', fingerprint: true
+
+        sh 'docker image prune -f'
+    }
 
         success {
             echo "========================================="
