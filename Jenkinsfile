@@ -19,15 +19,20 @@ pipeline {
         steps {
             script {
                 def scannerHome = tool 'SonarScanner'
+                 withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
 
-                withSonarQubeEnv('SonarQube') {
-                    sh """
-                    ${scannerHome}/bin/sonar-scanner \
-                    -Dsonar.projectKey=devops-production-platform \
-                    -Dsonar.projectName=devops-production-platform \
-                    -Dsonar.sources=application
-                    """
+                 withSonarQubeEnv('SonarQube') {
+
+                 sh """
+                 ${scannerHome}/bin/sonar-scanner \
+                 -Dsonar.projectKey=devops-production-platform \
+                 -Dsonar.projectName=devops-production-platform \
+                 -Dsonar.sources=application \
+                 -Dsonar.login=$SONAR_TOKEN
+                 """
                 }
+              }
+
             }
         }
     }
