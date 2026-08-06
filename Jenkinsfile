@@ -185,3 +185,4 @@ stage('Trivy Image Scan') {
         }
 
    }
+}
